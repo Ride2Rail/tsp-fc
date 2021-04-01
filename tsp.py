@@ -11,7 +11,7 @@ from flask            import Flask, request, abort
 import redis
 import json
 
-cache           = redis.Redis(host='cache', port=6379)
+cache           = redis.Redis(host='cache', port=6379, decode_responses=True)
 
 ##### Config
 service_basename = os.path.splitext(os.path.basename(__file__))[0]
@@ -105,10 +105,11 @@ def extract():
     output_offer_level, output_tripleg_level = cache_operations.extract_data_from_cache(
         cache,
         request_id,
-        ["currency"],
-        ["duration", "cleanliness", "space_available",
-         "ride_smoothness", "seating_quality", "internet_availability", "plugs_or_charging_points",
-         "silence_area_presence", "privacy_level", "business_area_presence"])
+        [],
+        #["duration", "cleanliness", "space_available",
+         #"ride_smoothness", "seating_quality", "internet_availability", "plugs_or_charging_points",
+         #"silence_area_presence", "privacy_level", "business_area_presence"]
+     [])
 
     if VERBOSE == 1:
         print("output_offer_level   = " + str(output_offer_level))
@@ -209,7 +210,7 @@ if __name__ == '__main__':
     REDIS_HOST = 'localhost'
     REDIS_PORT = 6379
     os.environ["FLASK_ENV"] = "development"
-    cache        = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
+    cache        = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
     app.run(port=FLASK_PORT, debug=True)
     exit(0)
 

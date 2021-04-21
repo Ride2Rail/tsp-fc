@@ -1,8 +1,17 @@
 FROM python:3.8
 
-COPY tsp.py /home/tsp-fc/tsp.py
+ENV APP_NAME=tsp.py
 
-COPY ./requirements.txt /home/tsp/requirements.txt
-RUN pip install -r /home/tsp/requirements.txt
+WORKDIR /code
 
-ENTRYPOINT ['tsp.py']
+ENV FLASK_APP="$APP_NAME"
+ENV FLASK_RUN_HOST=0.0.0.0
+
+RUN pip3 install --no-cache-dir --upgrade pip
+
+COPY requirements.txt requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+EXPOSE 5002
+
+CMD ["flask", "run"]

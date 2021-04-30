@@ -52,14 +52,33 @@ port = 6379
 
 # Usage
 ### Local development (debug on)
+
+The feature collector "tsp-fc" can be launched from the terminal locally by running the script "tsp.py":
+
 ```bash
 $ python3 tsp.py
  * Serving Flask app "price" (lazy loading)
  * Environment: development
  * Debug mode: on
 ```
+Moreover, the repository contains also configuration files required to launch the feature collector in Docker from the terminal by the command docker-compose up:
 
+
+```bash
+docker-compose up
+Starting tsp_fc ... done
+Attaching to tsp_fc
+tsp_fc    |  * Serving Flask app "tsp.py" (lazy loading)
+tsp_fc    |  * Environment: development
+tsp_fc    |  * Debug mode: on
+tsp_fc    |  * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+tsp_fc    |  * Restarting with stat
+tsp_fc    |  * Debugger is active!
+tsp_fc    |  * Debugger PIN: 248-423-277
+```
 ### Example Request
+
+To make a request (i.e. to calculate values of determinant factors assigned to the "tsp-fc" feature collector for a given mobility request defined by a request_id) the command curl can be used:
 ```bash
 $ curl --header 'Content-Type: application/json' \
        --request POST  \

@@ -1,0 +1,19 @@
+version: "3.8"
+services:
+  tsp-fc:
+    container_name: tsp-fc
+    build: .
+    ports:
+      - "5002:5000"
+    environment:
+      FLASK_ENV: development
+    container_name: tsp_fc
+    networks:
+      - offer-enhancer-net
+
+networks:
+  offer-enhancer-net:
+    external:
+      name: trias-extractor_offer-enhancer-net
+
+

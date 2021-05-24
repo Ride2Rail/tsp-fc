@@ -116,7 +116,7 @@ def extract():
             [],
             ["duration", "cleanliness", "space_available",
             "ride_smoothness", "seating_quality", "internet_availability", "plugs_or_charging_points",
-            "silence_area_presence", "privacy_level", "business_area_presence"])
+            "silence_area_presence", "privacy_level", "user_feedback", "business_area_presence"])
     except redis.exceptions.ConnectionError as exc:
         logging.debug("Reading from cache by tsp-fc feature collector failed.")
         response.status_code = 424
@@ -138,6 +138,7 @@ def extract():
     plugs_or_charging_points = {}
     silence_area_presence = {}
     privacy_level = {}
+    user_feedback = {}
     business_area_presence = {}
 
     if "offer_ids" in output_offer_level.keys():
@@ -153,6 +154,7 @@ def extract():
                 offer_plugs_or_charging_points = {}
                 offer_silence_area_presence = {}
                 offer_privacy_level = {}
+                offer_user_feedback = {}
                 offer_business_area_presence = {}
                 for tripleg in triplegs:
                     temp_duration[tripleg]                     = isodate.parse_duration(output_tripleg_level[offer][tripleg]["duration"]).seconds
@@ -164,6 +166,7 @@ def extract():
                     offer_plugs_or_charging_points[tripleg]    = convert_to_int(output_tripleg_level[offer][tripleg]["plugs_or_charging_points"])
                     offer_silence_area_presence[tripleg]       = convert_to_int(output_tripleg_level[offer][tripleg]["silence_area_presence"])
                     offer_privacy_level[tripleg]               = convert_to_float(output_tripleg_level[offer][tripleg]["privacy_level"])
+                    offer_user_feedback[tripleg]               = convert_to_float(output_tripleg_level[offer][tripleg]["user_feedback"])
                     offer_business_area_presence[tripleg]      = convert_to_float(output_tripleg_level[offer][tripleg]["business_area_presence"])
                 # aggregate data over trip legs
                 cleanliness[offer]               = normalization.aggregate_a_quantity_over_triplegs(triplegs, temp_duration, offer_cleanliness)
@@ -174,6 +177,7 @@ def extract():
                 plugs_or_charging_points[offer]  = normalization.aggregate_a_quantity_over_triplegs(triplegs, temp_duration, offer_plugs_or_charging_points)
                 silence_area_presence[offer]     = normalization.aggregate_a_quantity_over_triplegs(triplegs, temp_duration, offer_silence_area_presence)
                 privacy_level[offer]             = normalization.aggregate_a_quantity_over_triplegs(triplegs, temp_duration, offer_privacy_level)
+                user_feedback[offer]             = normalization.aggregate_a_quantity_over_triplegs(triplegs, temp_duration, offer_user_feedback)
                 business_area_presence[offer]    = normalization.aggregate_a_quantity_over_triplegs(triplegs, temp_duration, offer_business_area_presence)
     # calculate zscores
     if SCORES == "minmax_scores":
@@ -186,6 +190,7 @@ def extract():
         plugs_or_charging_points_scores     = normalization.minmaxscore(plugs_or_charging_points, flipped=False)
         silence_area_presence_scores        = normalization.minmaxscore(silence_area_presence, flipped=False)
         privacy_level_scores                = normalization.minmaxscore(privacy_level, flipped=False)
+        user_feedback_scores                = normalization.minmaxscore(user_feedback, flipped=False)
         business_area_presence_scores       = normalization.minmaxscore(business_area_presence, flipped=False)
     else:
         # calculate z-scores
@@ -197,6 +202,7 @@ def extract():
         plugs_or_charging_points_scores     = normalization.zscore(plugs_or_charging_points, flipped=False)
         silence_area_presence_scores        = normalization.zscore(silence_area_presence, flipped=False)
         privacy_level_scores                = normalization.zscore(privacy_level, flipped=False)
+        user_feedback_scores               = normalization.zscore(user_feedback, flipped=False)
         business_area_presence_scores       = normalization.zscore(business_area_presence, flipped=False)
 
     if VERBOSE == 1:
@@ -208,6 +214,7 @@ def extract():
         print("plugs_or_charging_points_scores  = " + str(plugs_or_charging_points_scores))
         print("silence_area_presence_scores     = " + str(silence_area_presence_scores))
         print("privacy_level_scores             = " + str(privacy_level_scores))
+        print("user_feedback_scores             = " + str(user_feedback_scores))
         print("business_area_presence_scores    = " + str(business_area_presence_scores))
     #
     # III. store the results produced by tsp-fc to cache
@@ -221,6 +228,7 @@ def extract():
         cache_operations.store_simple_data_to_cache_wrapper(cache, request_id, plugs_or_charging_points_scores, "plugs_or_charging_points")
         cache_operations.store_simple_data_to_cache_wrapper(cache, request_id, silence_area_presence_scores, "silence_area_presence")
         cache_operations.store_simple_data_to_cache_wrapper(cache, request_id, privacy_level_scores, "privacy_level")
+        cache_operations.store_simple_data_to_cache_wrapper(cache, request_id, user_feedback_scores, "user_feedback")
         cache_operations.store_simple_data_to_cache_wrapper(cache, request_id, business_area_presence_scores, "business_area_presence")
     except redis.exceptions.ConnectionError as exc:
         logging.debug("Writing outputs to cache by tsp-fc feature collector failed.")

@@ -116,7 +116,8 @@ def extract():
             [],
             ["duration", "cleanliness", "space_available",
             "ride_smoothness", "seating_quality", "internet_availability", "plugs_or_charging_points",
-            "silence_area_presence", "privacy_level", "user_feedback", "business_area_presence"])
+            "silence_area_presence", "privacy_level", "user_feedback", "bike_on_board", "likelihood_of_delays",
+            "last_minute_changes", "frequency_of_service", "business_area_presence"])
     except redis.exceptions.ConnectionError as exc:
         logging.debug("Reading from cache by tsp-fc feature collector failed.")
         response.status_code = 424
@@ -139,6 +140,10 @@ def extract():
     silence_area_presence = {}
     privacy_level = {}
     user_feedback = {}
+    bike_on_board          = {}
+    likelihood_of_delays   = {}
+    last_minute_changes    = {}
+    frequency_of_service   = {}
     business_area_presence = {}
 
     if "offer_ids" in output_offer_level.keys():
@@ -155,6 +160,10 @@ def extract():
                 offer_silence_area_presence = {}
                 offer_privacy_level = {}
                 offer_user_feedback = {}
+                offer_bike_on_board = {}
+                offer_likelihood_of_delays   = {}
+                offer_last_minute_changes    = {}
+                offer_frequency_of_service   = {}
                 offer_business_area_presence = {}
                 for tripleg in triplegs:
                     temp_duration[tripleg]                     = isodate.parse_duration(output_tripleg_level[offer][tripleg]["duration"]).seconds
@@ -167,6 +176,10 @@ def extract():
                     offer_silence_area_presence[tripleg]       = convert_to_int(output_tripleg_level[offer][tripleg]["silence_area_presence"])
                     offer_privacy_level[tripleg]               = convert_to_float(output_tripleg_level[offer][tripleg]["privacy_level"])
                     offer_user_feedback[tripleg]               = convert_to_float(output_tripleg_level[offer][tripleg]["user_feedback"])
+                    offer_bike_on_board[tripleg]               = convert_to_float(output_tripleg_level[offer][tripleg]["bike_on_board"])
+                    offer_likelihood_of_delays[tripleg]        = convert_to_float(output_tripleg_level[offer][tripleg]["likelihood_of_delays"])
+                    offer_last_minute_changes[tripleg]         = convert_to_float(output_tripleg_level[offer][tripleg]["last_minute_changes"])
+                    offer_frequency_of_service[tripleg]        = convert_to_float(output_tripleg_level[offer][tripleg]["frequency_of_service"])
                     offer_business_area_presence[tripleg]      = convert_to_float(output_tripleg_level[offer][tripleg]["business_area_presence"])
                 # aggregate data over trip legs
                 cleanliness[offer]               = normalization.aggregate_a_quantity_over_triplegs(triplegs, temp_duration, offer_cleanliness)
@@ -178,6 +191,10 @@ def extract():
                 silence_area_presence[offer]     = normalization.aggregate_a_quantity_over_triplegs(triplegs, temp_duration, offer_silence_area_presence)
                 privacy_level[offer]             = normalization.aggregate_a_quantity_over_triplegs(triplegs, temp_duration, offer_privacy_level)
                 user_feedback[offer]             = normalization.aggregate_a_quantity_over_triplegs(triplegs, temp_duration, offer_user_feedback)
+                bike_on_board[offer]             = normalization.aggregate_a_quantity_over_triplegs(triplegs, temp_duration, offer_bike_on_board)
+                likelihood_of_delays[offer]      = normalization.aggregate_a_quantity_over_triplegs(triplegs, temp_duration, offer_likelihood_of_delays)
+                last_minute_changes[offer]       = normalization.aggregate_a_quantity_over_triplegs(triplegs, temp_duration, offer_last_minute_changes)
+                frequency_of_service[offer]      = normalization.aggregate_a_quantity_over_triplegs(triplegs, temp_duration, offer_frequency_of_service)
                 business_area_presence[offer]    = normalization.aggregate_a_quantity_over_triplegs(triplegs, temp_duration, offer_business_area_presence)
     # calculate zscores
     if SCORES == "minmax_scores":
@@ -191,6 +208,10 @@ def extract():
         silence_area_presence_scores        = normalization.minmaxscore(silence_area_presence, flipped=False)
         privacy_level_scores                = normalization.minmaxscore(privacy_level, flipped=False)
         user_feedback_scores                = normalization.minmaxscore(user_feedback, flipped=False)
+        bike_on_board_scores                = normalization.minmaxscore(bike_on_board, flipped=False)
+        likelihood_of_delays_scores         = normalization.minmaxscore(likelihood_of_delays, flipped=True)
+        last_minute_changes_scores          = normalization.minmaxscore(last_minute_changes, flipped=True)
+        frequency_of_service_scores         = normalization.minmaxscore(frequency_of_service, flipped=False)
         business_area_presence_scores       = normalization.minmaxscore(business_area_presence, flipped=False)
     else:
         # calculate z-scores
@@ -202,7 +223,11 @@ def extract():
         plugs_or_charging_points_scores     = normalization.zscore(plugs_or_charging_points, flipped=False)
         silence_area_presence_scores        = normalization.zscore(silence_area_presence, flipped=False)
         privacy_level_scores                = normalization.zscore(privacy_level, flipped=False)
-        user_feedback_scores               = normalization.zscore(user_feedback, flipped=False)
+        user_feedback_scores                = normalization.zscore(user_feedback, flipped=False)
+        bike_on_board_scores                = normalization.zscore(bike_on_board, flipped=False)
+        likelihood_of_delays_scores         = normalization.zscore(likelihood_of_delays, flipped=True)
+        last_minute_changes_scores          = normalization.zscore(last_minute_changes, flipped=True)
+        frequency_of_service_scores         = normalization.zscore(frequency_of_service, flipped=False)
         business_area_presence_scores       = normalization.zscore(business_area_presence, flipped=False)
 
     if VERBOSE == 1:
@@ -215,6 +240,10 @@ def extract():
         print("silence_area_presence_scores     = " + str(silence_area_presence_scores))
         print("privacy_level_scores             = " + str(privacy_level_scores))
         print("user_feedback_scores             = " + str(user_feedback_scores))
+        print("bike_on_board_scores             = " + str(bike_on_board_scores))
+        print("likelihood_of_delays_scores      = " + str(likelihood_of_delays_scores))
+        print("last_minute_changes_scores       = " + str(last_minute_changes_scores))
+        print("frequency_of_service_scores      = " + str(frequency_of_service_scores))
         print("business_area_presence_scores    = " + str(business_area_presence_scores))
     #
     # III. store the results produced by tsp-fc to cache
@@ -229,6 +258,10 @@ def extract():
         cache_operations.store_simple_data_to_cache_wrapper(cache, request_id, silence_area_presence_scores, "silence_area_presence")
         cache_operations.store_simple_data_to_cache_wrapper(cache, request_id, privacy_level_scores, "privacy_level")
         cache_operations.store_simple_data_to_cache_wrapper(cache, request_id, user_feedback_scores, "user_feedback")
+        cache_operations.store_simple_data_to_cache_wrapper(cache, request_id, bike_on_board_scores, "bike_on_board")
+        cache_operations.store_simple_data_to_cache_wrapper(cache, request_id, likelihood_of_delays_scores, "likelihood_of_delays")
+        cache_operations.store_simple_data_to_cache_wrapper(cache, request_id, last_minute_changes_scores, "last_minute_changes")
+        cache_operations.store_simple_data_to_cache_wrapper(cache, request_id, frequency_of_service_scores, "frequency_of_service")
         cache_operations.store_simple_data_to_cache_wrapper(cache, request_id, business_area_presence_scores, "business_area_presence")
     except redis.exceptions.ConnectionError as exc:
         logging.debug("Writing outputs to cache by tsp-fc feature collector failed.")

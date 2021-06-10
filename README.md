@@ -11,7 +11,7 @@
 
 The "tsp-fc" feature collector is  a module of the **Ride2Rail Offer Categorizer** responsible for the computation of the following determinant factors: ***"cleanliness"***, ***"space_available"***, ***"ride_smoothness"***, ***"seating_quality"***, ***"internet_availability"***, ***"plugs_or_charging_points"***, ***"silence_area_presence"***, ***"privacy_level"***, ***"user_feedback"*** , ***"bike_on_board"***, ***"likelihood_of_delays"*** , ***"last_minute_changes"***, ***"frequency_of_service"*** and ***"business_area_presence"***. 
 
-Computation can be executed from ***["tsp.py"](https://github.com/Ride2Rail/tsp-fc/blob/main/tsp.py)*** by running the procedure ***extract()*** which is binded under the name ***compute*** with URL using ***[FLASK](https://flask.palletsprojects.com)*** (see example request below). Computation is composed of three phases:
+Computation can be executed from ***["tsp.py"](https://github.com/Ride2Rail/tsp-fc/blob/main/code/tsp.py)*** by running the procedure ***extract()*** which is binded under the name ***compute*** with URL using ***[FLASK](https://flask.palletsprojects.com)*** (see example request below). Computation is composed of three phases:
 
 ***Phase I:***   Extraction of data required by tsp-fc feature collector from the cache. A dedicated procedure defined for
             this purpose from the unit ***"[cache_operations.py](https://github.com/Ride2Rail/r2r-offer-utils/wiki/cache_operations.py)"*** is utilized.
